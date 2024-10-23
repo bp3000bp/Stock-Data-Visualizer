@@ -66,12 +66,22 @@ def generate_chart(filtered_data, stock_symbol, chart_type):
     plt.legend()
     plt.show()
 
+def get_valid_date_range():
+    while True:
+        start_date = input("Enter the start date (YYYY-MM-DD): ")
+        end_date = input("Enter the end date (YYYY-MM-DD): ")
+
+        if end_date >= start_date:
+            return start_date, end_date
+        else:
+            print("Invalid date range. End date cannot be before start date. Please enter the dates again.")
+
 def main():
     api_key = "1M1XTV42PNTYEAEU"
     symbol = input("Enter the stock symbol (e.g., IBM): ").upper()
-    start_date = input("Enter the start date (YYYY-MM-DD): ")
-    end_date = input("Enter the end date (YYYY-MM-DD): ")
-    
+
+    start_date, end_date = get_valid_date_range()
+
     today = datetime.today().strftime('%Y-%m-%d')
     if end_date > today:
         print(f"End date can't be after today's date: {today}. Adjusting to {today}.")
