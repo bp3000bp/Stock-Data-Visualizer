@@ -49,6 +49,8 @@ def filter_by_date_range(parsed_data, start_date, end_date):
     return filtered_data
 
 def generate_chart(filtered_data, stock_symbol, chart_type):
+    filtered_data = sorted(filtered_data, key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"))
+    
     dates = [entry["date"] for entry in filtered_data]
     closing_prices = [entry["close"] for entry in filtered_data]
 
