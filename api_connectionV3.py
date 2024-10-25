@@ -9,33 +9,34 @@ def fetch_stock_data(symbol, function, api_key):
         "function": function,
         "symbol": symbol,
         "apikey": api_key,
-        "outputsize": "full",  # For smaller datasets (last 100 days) change this to "compact"
+        "outputsize": "full",  # For smaller datasets (last 100 days) change outputsize to "compact"
     }
     response = requests.get(url, params=params)
     if response.status_code == 200:
-        print("Data fetched successfully!")
-        return response.json()
+        data = response.json()
+        if "Time Series (Daily)" in data:
+            print("Data fetched successfully!")
+            return data
+        else:
+            print("Invalid ticker symbol. Please try again.")
+            return None
     else:
         print(f"Error fetching data: {response.status_code}")
         return None
 
 def parse_stock_data(data):
-    if "Time Series (Daily)" in data:
-        daily_data = data["Time Series (Daily)"]
-        parsed_data = []
-        for date, values in daily_data.items():
-            parsed_data.append({
-                "date": date,
-                "open": float(values["1. open"]),
-                "high": float(values["2. high"]),
-                "low": float(values["3. low"]),
-                "close": float(values["4. close"]),
-                "volume": int(values["5. volume"])
-            })
-        return parsed_data
-    else:
-        print("No daily data found in response.")
-        return None
+    daily_data = data.get("Time Series (Daily)", {})
+    parsed_data = []
+    for date, values in daily_data.items():
+        parsed_data.append({
+            "date": date,
+            "open": float(values["1. open"]),
+            "high": float(values["2. high"]),
+            "low": float(values["3. low"]),
+            "close": float(values["4. close"]),
+            "volume": int(values["5. volume"])
+        })
+    return parsed_data
 
 def filter_by_date_range(parsed_data, start_date, end_date):
     start = datetime.strptime(start_date, "%Y-%m-%d")
@@ -78,28 +79,32 @@ def get_valid_date_range():
 
 def main():
     api_key = "1M1XTV42PNTYEAEU"
-    symbol = input("Enter the stock symbol (e.g., IBM): ").upper()
+    
+    while True:
+        symbol = input("Enter the stock symbol (e.g., IBM): ").upper()
+        start_date, end_date = get_valid_date_range()
+        
+        today = datetime.today().strftime('%Y-%m-%d')
+        if end_date > today:
+            print(f"End date can't be after today's date: {today}. Adjusting to {today}.")
+            end_date = today
 
-    start_date, end_date = get_valid_date_range()
+        chart_type = input("Enter chart type (line/bar): ").lower()
+        function = "TIME_SERIES_DAILY"
 
-    today = datetime.today().strftime('%Y-%m-%d')
-    if end_date > today:
-        print(f"End date can't be after today's date: {today}. Adjusting to {today}.")
-        end_date = today
+        stock_data = fetch_stock_data(symbol, function, api_key)
 
-    chart_type = input("Enter chart type (line/bar): ").lower()
-    function = "TIME_SERIES_DAILY"
+        if stock_data:
+            parsed_data = parse_stock_data(stock_data)
+            filtered_data = filter_by_date_range(parsed_data, start_date, end_date)
 
-    stock_data = fetch_stock_data(symbol, function, api_key)
-
-    if stock_data:
-        parsed_data = parse_stock_data(stock_data)
-        filtered_data = filter_by_date_range(parsed_data, start_date, end_date)
-
-        if filtered_data:
-            generate_chart(filtered_data, symbol, chart_type)
+            if filtered_data:
+                generate_chart(filtered_data, symbol, chart_type)
+                break  
+            else:
+                print("No data found for the specified date range.")
         else:
-            print("No data found for the specified date range.")
+            print("Please re-enter the details with a valid stock ticker.")
 
 if __name__ == "__main__":
     main()
