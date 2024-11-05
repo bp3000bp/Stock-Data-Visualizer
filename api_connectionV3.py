@@ -80,7 +80,7 @@ def get_valid_date_range():
             print("Invalid date range. End date cannot be before start date. Please enter the dates again.")
 
 def main():
-    api_key = "1M1XTV42PNTYEAEU"
+    api_key = "39SA6PJ5FMOG66SX"
     
     while True:
         symbol = input("Enter the stock symbol (e.g., IBM): ").upper()
